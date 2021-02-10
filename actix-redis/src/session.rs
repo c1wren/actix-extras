@@ -396,7 +396,7 @@ mod test {
             .unwrap_or(Some(0))
             .unwrap_or(0);
 
-        Ok(HttpResponse::Ok().json(web::Json(IndexResponse { user_id, counter })))
+        Ok(HttpResponse::Ok().json(&IndexResponse { user_id, counter }))
     }
 
     async fn do_something(session: Session) -> Result<HttpResponse> {
@@ -407,7 +407,7 @@ mod test {
             .map_or(1, |inner| inner + 1);
         session.set("counter", counter)?;
 
-        Ok(HttpResponse::Ok().json(web::Json(IndexResponse { user_id, counter })))
+        Ok(HttpResponse::Ok().json(&IndexResponse { user_id, counter }))
     }
 
     #[derive(Deserialize)]
@@ -428,10 +428,10 @@ mod test {
             .unwrap_or(Some(0))
             .unwrap_or(0);
 
-        Ok(HttpResponse::Ok().json(web::Json(IndexResponse {
+        Ok(HttpResponse::Ok().json(&IndexResponse {
             user_id: Some(id),
             counter,
-        })))
+        }))
     }
 
     async fn logout(session: Session) -> Result<HttpResponse> {
