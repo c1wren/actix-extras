@@ -131,11 +131,11 @@ where
     type Error = Error;
     type Future = CorsMiddlewareServiceFuture<B>;
 
-    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+    fn poll_ready(&self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.service.poll_ready(cx)
     }
 
-    fn call(&mut self, req: ServiceRequest) -> Self::Future {
+    fn call(&self, req: ServiceRequest) -> Self::Future {
         if self.inner.preflight && req.method() == Method::OPTIONS {
             let inner = Rc::clone(&self.inner);
             let res = Self::handle_preflight(&inner, req);
@@ -198,7 +198,7 @@ mod tests {
             .unwrap();
 
         let req = TestRequest::get()
-            .header(header::ORIGIN, "http://example.com")
+            .insert_header((header::ORIGIN, "http://example.com"))
             .to_srv_request();
         let res = cors.call(req).await.unwrap();
         assert_eq!(
@@ -209,8 +209,8 @@ mod tests {
         );
 
         let req = TestRequest::get()
-            .header(header::ORIGIN, "http://example.com")
-            .header(header::DNT, "1")
+            .insert_header((header::ORIGIN, "http://example.com"))
+            .insert_header((header::DNT, "1"))
             .to_srv_request();
         let res = cors.call(req).await.unwrap();
         assert_eq!(

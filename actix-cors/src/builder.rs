@@ -145,7 +145,7 @@ impl Cors {
             match TryInto::<Uri>::try_into(origin) {
                 Ok(_) if origin == "*" => {
                     error!("Wildcard in `allowed_origin` is not allowed. Use `send_wildcard`.");
-                    self.error = Some(Either::B(CorsError::WildcardOrigin));
+                    self.error = Some(Either::Right(CorsError::WildcardOrigin));
                 }
 
                 Ok(_) => {
@@ -162,7 +162,7 @@ impl Cors {
                 }
 
                 Err(err) => {
-                    self.error = Some(Either::A(err.into()));
+                    self.error = Some(Either::Left(err.into()));
                 }
             }
         }
@@ -224,7 +224,7 @@ impl Cors {
                     }
 
                     Err(err) => {
-                        self.error = Some(Either::A(err.into()));
+                        self.error = Some(Either::Left(err.into()));
                         break;
                     }
                 }
@@ -266,7 +266,7 @@ impl Cors {
                     }
                 }
 
-                Err(err) => self.error = Some(Either::A(err.into())),
+                Err(err) => self.error = Some(Either::Left(err.into())),
             }
         }
 
@@ -303,7 +303,7 @@ impl Cors {
                         }
                     }
                     Err(err) => {
-                        self.error = Some(Either::A(err.into()));
+                        self.error = Some(Either::Left(err.into()));
                         break;
                     }
                 }
@@ -351,7 +351,7 @@ impl Cors {
                     }
                 }
                 Err(err) => {
-                    self.error = Some(Either::A(err.into()));
+                    self.error = Some(Either::Left(err.into()));
                     break;
                 }
             }
@@ -498,8 +498,8 @@ where
     fn new_transform(&self, service: S) -> Self::Future {
         if let Some(ref err) = self.error {
             match err {
-                Either::A(err) => error!("{}", err),
-                Either::B(err) => error!("{}", err),
+                Either::Left(err) => error!("{}", err),
+                Either::Right(err) => error!("{}", err),
             }
 
             return future::err(());
@@ -596,7 +596,8 @@ mod test {
             .await
             .unwrap();
 
-        let req = TestRequest::with_header("Origin", "https://www.example.com")
+        let req = TestRequest::default()
+            .insert_header(("Origin", "https://www.example.com"))
             .to_srv_request();
 
         let resp = test::call_service(&mut cors, req).await;

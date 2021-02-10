@@ -163,11 +163,11 @@ where
     type Error = S::Error;
     type Future = LocalBoxFuture<'static, Result<ServiceResponse<B>, Error>>;
 
-    fn poll_ready(&mut self, ctx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+    fn poll_ready(&self, ctx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.service.borrow_mut().poll_ready(ctx)
     }
 
-    fn call(&mut self, req: ServiceRequest) -> Self::Future {
+    fn call(&self, req: ServiceRequest) -> Self::Future {
         let process_fn = Arc::clone(&self.process_fn);
 
         let service = Rc::clone(&self.service);
@@ -262,7 +262,9 @@ mod tests {
             _extractor: PhantomData,
         };
 
-        let req = TestRequest::with_header("Authorization", "Bearer 1").to_srv_request();
+        let req = TestRequest::default()
+            .insert_header(("Authorization", "Bearer 1"))
+            .to_srv_request();
 
         let f = middleware.call(req).await;
 
@@ -285,15 +287,21 @@ mod tests {
             _extractor: PhantomData,
         };
 
-        let req = TestRequest::with_header("Authorization", "Bearer 1").to_srv_request();
+        let req = TestRequest::default()
+            .insert_header(("Authorization", "Bearer 1"))
+            .to_srv_request();
 
         let f1 = middleware.call(req).await;
 
-        let req = TestRequest::with_header("Authorization", "Bearer 1").to_srv_request();
+        let req = TestRequest::default()
+            .insert_header(("Authorization", "Bearer 1"))
+            .to_srv_request();
 
         let f2 = middleware.call(req).await;
 
-        let req = TestRequest::with_header("Authorization", "Bearer 1").to_srv_request();
+        let req = TestRequest::default()
+            .insert_header(("Authorization", "Bearer 1"))
+            .to_srv_request();
 
         let f3 = middleware.call(req).await;
 
