@@ -42,34 +42,34 @@ impl<S> CorsMiddleware<S> {
         let mut res = HttpResponse::Ok();
 
         if let Some(origin) = inner.access_control_allow_origin(req.head()) {
-            res.header(header::ACCESS_CONTROL_ALLOW_ORIGIN, origin);
+            res.append_header((header::ACCESS_CONTROL_ALLOW_ORIGIN, origin));
         }
 
         if let Some(ref allowed_methods) = inner.allowed_methods_baked {
-            res.header(
+            res.append_header((
                 header::ACCESS_CONTROL_ALLOW_METHODS,
                 allowed_methods.clone(),
-            );
+            ));
         }
 
         if let Some(ref headers) = inner.allowed_headers_baked {
-            res.header(header::ACCESS_CONTROL_ALLOW_HEADERS, headers.clone());
+            res.append_header((header::ACCESS_CONTROL_ALLOW_HEADERS, headers.clone()));
         } else if let Some(headers) =
             req.headers().get(header::ACCESS_CONTROL_REQUEST_HEADERS)
         {
             // all headers allowed, return
-            res.header(header::ACCESS_CONTROL_ALLOW_HEADERS, headers.clone());
+            res.append_header((header::ACCESS_CONTROL_ALLOW_HEADERS, headers.clone()));
         }
 
         if inner.supports_credentials {
-            res.header(
+            res.append_header((
                 header::ACCESS_CONTROL_ALLOW_CREDENTIALS,
                 HeaderValue::from_static("true"),
-            );
+            ));
         }
 
         if let Some(max_age) = inner.max_age {
-            res.header(header::ACCESS_CONTROL_MAX_AGE, max_age.to_string());
+            res.append_header((header::ACCESS_CONTROL_MAX_AGE, max_age.to_string()));
         }
 
         let res = res.finish();
